@@ -1,0 +1,26 @@
+name: Publish to docker hub
+on:
+  workflow_dispatch:
+    inputs:
+      image_version:
+        type: string
+
+env:
+  DOCKER_HUB_USER: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+jobs:
+  release:
+    name: Build and release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and release
+        run: |
+          docker login --username $DOCKER_HUB_USER --password-stdin <<<"$DOCKER_HUB_PASSWORD"
+          docker buildx build --platform linux/arm64,linux/amd64 --tag mergermarket/c6-mono-dev:${{ inputs.image_version }} --tag mergermarket/c6-mono-dev:latest --push .
